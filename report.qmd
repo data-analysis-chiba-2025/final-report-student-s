@@ -1,0 +1,77 @@
+---
+title: "Analysis of IKEA furniture"
+author: Student S
+date: 2020-11-03
+format: docx
+---
+
+```{r}
+#| label: setup
+#| echo: false
+#| message: false
+
+# Load packages
+library(tidyverse)
+tuesdata <- tidytuesdayR::tt_load('2020-11-03')
+tuesdata <- tidytuesdayR::tt_load(2020, week = 45)
+
+ikea <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2020/2020-11-03/ikea.csv')
+```
+
+## Introduction
+
+This data was taken from Kaggle. The original source of information about IKEA is an article about IKEA by Five Thirty Eight. Here, I analyze the “IKEA Furniture” data set and answer the following questions:
+
+-Does the size of the furniture make it more expensive?
+
+-What is the most popular furniture category?
+
+## Data visualization
+One Saudi Arabian riyal is worth 38.94 yen in Japanese yen, so for this time I will consider 1 riyal to be 40 yen.
+```{r}
+#| echo: false
+#| warning: false
+ikea <- ikea |>
+  mutate(volume = width * height * depth,
+         price_yen = price * 40
+         )
+
+ggplot(
+ikea,
+aes(
+x = volume, 
+y = price)) +
+geom_point(alpha = 0.4, color= "blue") + 
+geom_smooth(method = "lm", se = FALSE, color = "red") +
+scale_x_log10() + 
+scale_y_log10() + 
+labs(title = "How Furniture Size Affects Price at IKEA",
+subtitle = "Based on volume (W×H×D) vs. price (in Japanese Yen)",
+x = "Volume(cm³, log scale)",
+y = "Price(Yen, log scale)"
+) +
+theme_minimal()
+```
+```{r}
+
+ikea |>
+  count(category, sort = TRUE) |>
+  top_n(10) |>
+  ggplot(aes(x = reorder(category, n), y = n)) +
+  geom_col(fill = "orange") +
+  coord_flip() +
+  labs(title = "Top 10 IKEA Categories by Product Count",
+       x = "Category",
+       y = "Number of Products") +
+  theme_minimal()
+```
+
+##Discussion
+
+There is a positive correlation between product volume(width×height×depth) and price. From the scatter plot, larger furniture pieces tend to be more expensive. However, this relationship is not perfectly linear. This suggests that while size does affect price, other factors are also important. 
+From the top category bar chart, “tables & desks" are the most used product type, followed by "bookcases," "shelving units," "chairs," and so on. This indicates that IKEA places a strong emphasis on versatile and space-saving furniture, especially storage and seating.
+
+
+## References
+1 SAR to JPY - Convert Saudi Arabian Riyals to Japanese Yen
+https://www.xe.com/currencyconverter/convert/?Amount=1&From=SAR&To=JPY
